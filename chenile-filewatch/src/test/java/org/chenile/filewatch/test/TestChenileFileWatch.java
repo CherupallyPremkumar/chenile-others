@@ -22,6 +22,7 @@ import com.google.common.jimfs.Jimfs;
 public class TestChenileFileWatch extends SpringBootServletInitializer{
 	public static final String SRC_DIR = "/tmp/src/foo";
 	public static final String DEST_DIR = "/tmp/dest/foo";
+	public static final String ERROR_DIR = "/tmp/error/foo";
 
 	public static void main(String[] args) {
 		SpringApplication.run(TestChenileFileWatch.class, args);
@@ -38,8 +39,9 @@ public class TestChenileFileWatch extends SpringBootServletInitializer{
     	
     	Path dest = fileSystem.getPath(DEST_DIR);
     	Files.createDirectories(dest);
+    	Path error = fileSystem.getPath(ERROR_DIR);
+    	Files.createDirectories(error);
     	return fileSystem;
     }
 
 }
-

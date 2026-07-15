@@ -51,6 +51,9 @@ public class TestFileWatchFeatures {
     private ObjectMapper om;
     
     @Before public void setUp() throws IOException {
+    	latch = new CountDownLatch(3);
+    	actualList.clear();
+    	expectedList.clear();
     	om = new ObjectMapper();
     	csvtest = fileSystem.getPath(TestChenileFileWatch.SRC_DIR + "/csvtest.header");
     	jsontest = fileSystem.getPath(TestChenileFileWatch.SRC_DIR + "/jsontest.header");
@@ -107,7 +110,7 @@ public class TestFileWatchFeatures {
     @Test public void testIt() {
     	try {
     		writeFiles();
-			assertTrue(latch.await(30, TimeUnit.SECONDS));
+			assertTrue(latch.await(10, TimeUnit.SECONDS));
 			checkIfAllInputProcessed();
 			checkIfFilesMovedToProcessedFolder();
 		} catch (Exception e) {			
