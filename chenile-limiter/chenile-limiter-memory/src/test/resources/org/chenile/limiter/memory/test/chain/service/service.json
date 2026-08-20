@@ -1,0 +1,18 @@
+{
+	"name": "_counterService_",
+	"id": "counterService",
+	"operations": [
+		{
+			"name": "hit",
+			"auditable": "false",
+			"url": "/hit",
+			"httpMethod": "GET",
+			"produces": "JSON",
+			"consumes": "JSON",
+			"secure": false,
+			"input": "",
+			"output": "",
+			"params": []
+		}
+	]
+}
