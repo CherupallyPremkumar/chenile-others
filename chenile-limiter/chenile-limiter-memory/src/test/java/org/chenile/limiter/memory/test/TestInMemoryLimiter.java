@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TestInMemoryLimiter {
@@ -60,6 +62,40 @@ public class TestInMemoryLimiter {
         Thread.sleep(1100);
 
         interceptor.execute(exchange);
+    }
+
+    @Test
+    public void anAllowedCallCarriesTheQuotaStandingInHeaders() throws Exception {
+        ChenileExchange exchange = exchangeFor("tenant1", "getDetails", 3, 60);
+
+        interceptor.execute(exchange);
+
+        assertEquals("3", exchange.getHeaders().get("X-RateLimit-Limit"));
+        assertEquals("2", exchange.getHeaders().get("X-RateLimit-Remaining"));
+        // one token spent, two left; a reset must be advertised and cannot exceed the window
+        long reset = Long.parseLong((String) exchange.getHeaders().get("X-RateLimit-Reset"));
+        assertTrue("reset should be within the window", reset > 0 && reset <= 60);
+        // no back-off header while the caller is still under quota
+        assertNull(exchange.getHeaders().get("Retry-After"));
+    }
+
+    @Test
+    public void aRejectedCallAdvertisesRetryAfterAndZeroRemaining() throws Exception {
+        ChenileExchange exchange = exchangeFor("tenant1", "getDetails", 2, 60);
+
+        interceptor.execute(exchange);
+        interceptor.execute(exchange);
+        try {
+            interceptor.execute(exchange);
+            fail("the third request is over quota");
+        } catch (ErrorNumException expected) {
+            assertEquals(429, expected.getErrorNum());
+        }
+
+        assertEquals("2", exchange.getHeaders().get("X-RateLimit-Limit"));
+        assertEquals("0", exchange.getHeaders().get("X-RateLimit-Remaining"));
+        long retryAfter = Long.parseLong((String) exchange.getHeaders().get("Retry-After"));
+        assertTrue("Retry-After should be a non-negative wait", retryAfter >= 0 && retryAfter <= 60);
     }
 
     /** A non-positive window makes Redis EXPIRE delete the key, so it must never reach a provider. */
